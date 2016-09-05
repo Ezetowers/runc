@@ -132,6 +132,7 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 	if !strings.HasPrefix(dest, rootfs) {
 		dest = filepath.Join(rootfs, dest)
 	}
+	fmt.Fprintf(os.Stderr, "mountToRootfs: device config %+v", m)
 
 	switch m.Device {
 	case "proc", "sysfs":
