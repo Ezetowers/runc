@@ -126,6 +126,8 @@ func mountCmd(cmd configs.Command) error {
 }
 
 func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
+	fmt.Printf("mountToRootfs: device config %+v", m)
+
 	var (
 		dest = m.Destination
 	)
@@ -133,9 +135,7 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 		dest = filepath.Join(rootfs, dest)
 	}
 	fmt.Printf("mountToRootfs: device config %+v", m)
-	if true {
-		return nil
-	}
+
 	switch m.Device {
 	case "proc", "sysfs":
 		if err := os.MkdirAll(dest, 0755); err != nil {
