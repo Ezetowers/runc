@@ -133,7 +133,7 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 		dest = filepath.Join(rootfs, dest)
 	}
 	fmt.Printf("mountToRootfs: device config %+v", m)
-	if 1 {
+	if true {
 		return nil
 	}
 	switch m.Device {
