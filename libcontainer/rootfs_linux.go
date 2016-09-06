@@ -212,7 +212,7 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 			}
 		}
 	case "ceph", "nfs":
-		fmt.Printf(os.Stderr, "CEPH/NFS - mountToRootfs: device config %+v", m)
+		fmt.Printf("CEPH/NFS - mountToRootfs: device config %+v", m)
 
 		if err := createIfNotExists(dest, true); err != nil {
 			return err
