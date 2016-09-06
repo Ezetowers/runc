@@ -126,15 +126,12 @@ func mountCmd(cmd configs.Command) error {
 }
 
 func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
-	fmt.Printf("mountToRootfs: device config %+v", m)
-
 	var (
 		dest = m.Destination
 	)
 	if !strings.HasPrefix(dest, rootfs) {
 		dest = filepath.Join(rootfs, dest)
 	}
-	fmt.Printf("mountToRootfs: device config %+v", m)
 
 	switch m.Device {
 	case "proc", "sysfs":
@@ -215,6 +212,8 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 			}
 		}
 	case "ceph", "nfs":
+		fmt.Printf(os.Stderr, "CEPH/NFS - mountToRootfs: device config %+v", m)
+
 		if err := createIfNotExists(dest, true); err != nil {
 			return err
 		}
@@ -233,7 +232,8 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 			args = append(args, "-o", "discard")
 		}
 		// Using the mount command rather than the mount syscall because for NFS mounts, the syscall requires us to figure out our own IP address
-		cmd := exec.Command("mount", modeFlag, m.Source, dest)
+		//cmd := exec.Command("mount", modeFlag, m.Source, dest)
+		cmd := exec.Command("mount", args)
 		var out bytes.Buffer
 		cmd.Stderr = &out
 		if err := cmd.Run(); err != nil {
