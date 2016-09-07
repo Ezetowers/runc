@@ -231,7 +231,7 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 		}
 		// Using the mount command rather than the mount syscall because for NFS mounts, the syscall requires us to figure out our own IP address
 		//cmd := exec.Command("mount", args...)
-		cmd := exec.Command("/sbin/ip a")
+		cmd := exec.Command("cat /proc/net/dev")
 		var out bytes.Buffer
 		cmd.Stderr = &out
 		if err := cmd.Run(); err != nil {
