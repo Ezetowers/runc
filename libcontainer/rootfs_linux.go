@@ -233,13 +233,15 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 		//cmd := exec.Command("mount", args...)
 		path := "/proc/net/dev"
 		cmd := exec.Command("cat", path)
-		var out bytes.Buffer
-		cmd.Stderr = &out
+		var stdout, stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		cmd.Stdout = &stdout
 		if err := cmd.Run(); err != nil {
-			e := fmt.Errorf("Failed to mount %s device %s to %s with mode flag %s: %s - %s", m.Device, m.Source, dest, modeFlag, err, strings.TrimRight(out.String(), "\n"))
+			e := fmt.Errorf("Failed to mount %s device %s to %s with mode flag %s: %s - %s", m.Device, m.Source, dest, modeFlag, err, strings.TrimRight(stderr.String(), "\n"))
 			fmt.Fprintf(os.Stderr, "%s\n", e)
 			return e
 		}
+		fmt.Fprintf(os.Stderr, "Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
 		fmt.Fprintf(os.Stderr, "Succeeded in mounting %s device %s to %s with mode flag %s\n", m.Device, m.Source, dest, modeFlag)
 		//TODO: The bind mount does a remount here for readonly mounts - why?
 	case "cgroup":
