@@ -26,7 +26,7 @@ all: $(RUNC_LINK)
 	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -tags "$(BUILDTAGS)" -o runc .
 
 static: $(RUNC_LINK)
-	CGO_ENABLED=1 go build -i -tags "$(BUILDTAGS) cgo static_build" -ldflags "-w -extldflags -static -X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o runc .
+	CGO_ENABLED=1 go build -i -tags "$(BUILDTAGS) cgo static_build" -ldflags " -extldflags -static -X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o runc .
 
 $(RUNC_LINK):
 	ln -sfn $(CURDIR) $(RUNC_LINK)

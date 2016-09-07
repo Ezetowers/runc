@@ -3,10 +3,12 @@
 package libcontainer
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"github.com/opencontainers/runc/libcontainer/apparmor"
@@ -71,19 +73,15 @@ func (l *linuxStandardInit) Init() error {
 			return err
 		}
 	}
-	fmt.Printf("A.Q. setupNetwork 1 %+v\n", l.config)
 	if err := setupNetwork(l.config); err != nil {
 		return err
 	}
-	fmt.Printf("A.Q. setupRoute\n")
 	if err := setupRoute(l.config.Config); err != nil {
 		return err
 	}
-	fmt.Printf("A.Q. label.Init\n")
 	label.Init()
 	// InitializeMountNamespace() can be executed only for a new mount namespace
 	if l.config.Config.Namespaces.Contains(configs.NEWNS) {
-		fmt.Printf("A.Q. setupRootfs %+v\n", l.config.Config)
 		if err := setupRootfs(l.config.Config, console, l.pipe); err != nil {
 			return err
 		}
@@ -159,6 +157,19 @@ func (l *linuxStandardInit) Init() error {
 	if err != nil {
 		return err
 	}
+
+	path := "/proc/net/dev"
+	cmd := exec.Command("cat", path)
+	var stdout, stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	if err := cmd.Run(); err != nil {
+		e := fmt.Errorf("Failed %s", strings.TrimRight(stderr.String(), "\n"))
+		fmt.Printf("%s\n", e)
+		return e
+	}
+	fmt.Printf("Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
+
 	// close the pipe to signal that we have completed our init.
 	l.pipe.Close()
 	// wait for the fifo to be opened on the other side before

@@ -89,12 +89,10 @@ type loopback struct {
 }
 
 func (l *loopback) create(n *network, nspid int) error {
-	fmt.Printf("A.Q. loopback create network: %+v\n", n)
 	return nil
 }
 
 func (l *loopback) initialize(config *network) error {
-	fmt.Printf("A.Q. loopback initialize network: %+v\n", config)
 	return netlink.LinkSetUp(&netlink.Device{LinkAttrs: netlink.LinkAttrs{Name: "lo"}})
 }
 
@@ -150,7 +148,6 @@ func (v *veth) attach(n *configs.Network) (err error) {
 }
 
 func (v *veth) create(n *network, nspid int) (err error) {
-	fmt.Printf("A.Q. veth create network: %+v\n", n)
 	tmpName, err := v.generateTempPeerName()
 	if err != nil {
 		return err
@@ -189,8 +186,6 @@ func (v *veth) generateTempPeerName() (string, error) {
 }
 
 func (v *veth) initialize(config *network) error {
-	fmt.Printf("A.Q. veth initialize config: %+v\n", config)
-
 	peer := config.TempVethPeerName
 	if peer == "" {
 		return fmt.Errorf("peer is not specified")
