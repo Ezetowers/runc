@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -148,6 +149,7 @@ func (v *veth) attach(n *configs.Network) (err error) {
 }
 
 func (v *veth) create(n *network, nspid int) (err error) {
+	fmt.Fprintf(os.Stderr, "A.Q. veth create network: %+v\n", n)
 	tmpName, err := v.generateTempPeerName()
 	if err != nil {
 		return err
@@ -186,6 +188,8 @@ func (v *veth) generateTempPeerName() (string, error) {
 }
 
 func (v *veth) initialize(config *network) error {
+	fmt.Fprintf(os.Stderr, "A.Q. veth initialize config: %+v\n", config)
+
 	peer := config.TempVethPeerName
 	if peer == "" {
 		return fmt.Errorf("peer is not specified")

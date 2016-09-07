@@ -71,20 +71,26 @@ func (l *linuxStandardInit) Init() error {
 			return err
 		}
 	}
+	fmt.Fprintf(os.Stderr, "A.Q. setupNetwork\n")
 	if err := setupNetwork(l.config); err != nil {
 		return err
 	}
+	fmt.Fprintf(os.Stderr, "A.Q. setupRoute\n")
 	if err := setupRoute(l.config.Config); err != nil {
 		return err
 	}
-
+	fmt.Fprintf(os.Stderr, "A.Q. label.Init\n")
 	label.Init()
 	// InitializeMountNamespace() can be executed only for a new mount namespace
 	if l.config.Config.Namespaces.Contains(configs.NEWNS) {
+		fmt.Fprintf(os.Stderr, "A.Q. setupRootfs %+v\n", l.config.Config)
 		if err := setupRootfs(l.config.Config, console, l.pipe); err != nil {
-			return err
+			// A.Q.
+			panic(err)
+			//return err
 		}
 	}
+
 	if hostname := l.config.Config.Hostname; hostname != "" {
 		if err := syscall.Sethostname([]byte(hostname)); err != nil {
 			return err
