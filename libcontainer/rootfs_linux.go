@@ -241,6 +241,12 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 			fmt.Fprintf(os.Stderr, "%s\n", e)
 			return e
 		}
+		else {
+			// A.Q.
+			fmt.Fprintf(os.Stderr, "Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
+			fmt.Fprintf(os.Stderr, "Succeeded in mounting %s device %s to %s with mode flag %s\n", m.Device, m.Source, dest, modeFlag)
+			panic(nil)
+		}
 		fmt.Fprintf(os.Stderr, "Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
 		fmt.Fprintf(os.Stderr, "Succeeded in mounting %s device %s to %s with mode flag %s\n", m.Device, m.Source, dest, modeFlag)
 		//TODO: The bind mount does a remount here for readonly mounts - why?

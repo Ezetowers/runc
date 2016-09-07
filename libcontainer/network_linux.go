@@ -90,10 +90,12 @@ type loopback struct {
 }
 
 func (l *loopback) create(n *network, nspid int) error {
+	fmt.Fprintf(os.Stderr, "A.Q. loopback create network: %+v\n", n)
 	return nil
 }
 
 func (l *loopback) initialize(config *network) error {
+	fmt.Fprintf(os.Stderr, "A.Q. loopback initialize network: %+v\n", config)
 	return netlink.LinkSetUp(&netlink.Device{LinkAttrs: netlink.LinkAttrs{Name: "lo"}})
 }
 

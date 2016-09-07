@@ -71,7 +71,7 @@ func (l *linuxStandardInit) Init() error {
 			return err
 		}
 	}
-	fmt.Fprintf(os.Stderr, "A.Q. setupNetwork\n")
+	fmt.Fprintf(os.Stderr, "A.Q. setupNetwork 1 %+v\n", l.config)
 	if err := setupNetwork(l.config); err != nil {
 		return err
 	}

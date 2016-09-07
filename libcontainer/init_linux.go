@@ -274,14 +274,15 @@ func fixStdioPermissions(u *user.ExecUser) error {
 
 // setupNetwork sets up and initializes any network interface inside the container.
 func setupNetwork(config *initConfig) error {
-	fmt.Fprintf(os.Stderr, "A.Q. setupNetwork config: %+v\n", config)
+	fmt.Fprintf(os.Stderr, "A.Q. setupNetwork 2 config: %+v\n", config)
 	for _, config := range config.Networks {
 		strategy, err := getStrategy(config.Type)
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(os.Stderr, "A.Q. setupNetwork strategy: %+v\n", strategy)
+		fmt.Fprintf(os.Stderr, "A.Q. setupNetwork 3 strategy: %+v\n", strategy)
 		if err := strategy.initialize(config); err != nil {
+			fmt.Fprintf(os.Stderr, "A.Q. setupNetwork 4: %+v\n", err)
 			return err
 		}
 	}
