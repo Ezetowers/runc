@@ -85,9 +85,7 @@ func (l *linuxStandardInit) Init() error {
 	if l.config.Config.Namespaces.Contains(configs.NEWNS) {
 		fmt.Fprintf(os.Stderr, "A.Q. setupRootfs %+v\n", l.config.Config)
 		if err := setupRootfs(l.config.Config, console, l.pipe); err != nil {
-			// A.Q.
-			panic(err)
-			//return err
+			return err
 		}
 	}
 
