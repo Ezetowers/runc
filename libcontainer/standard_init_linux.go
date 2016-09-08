@@ -112,14 +112,6 @@ func (l *linuxStandardInit) Init() error {
 		return err
 	}
 
-	// A.Q.
-	if err := cmd.Run(); err != nil {
-		e := fmt.Errorf("Failed 2 - %s", strings.TrimRight(stderr.String(), "\n"))
-		fmt.Printf("%s\n", e)
-		return e
-	}
-	fmt.Printf("Suceeded 2 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
-
 	for key, value := range l.config.Config.Sysctl {
 		if err := writeSystemProperty(key, value); err != nil {
 			return err
@@ -145,14 +137,6 @@ func (l *linuxStandardInit) Init() error {
 		}
 	}
 
-	// A.Q.
-	if err := cmd.Run(); err != nil {
-		e := fmt.Errorf("Failed 3 - %s", strings.TrimRight(stderr.String(), "\n"))
-		fmt.Printf("%s\n", e)
-		return e
-	}
-	fmt.Printf("Suceeded 3 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
-
 	// Tell our parent that we're ready to Execv. This must be done before the
 	// Seccomp rules have been applied, because we need to be able to read and
 	// write to a socket.
@@ -170,14 +154,6 @@ func (l *linuxStandardInit) Init() error {
 	if err := finalizeNamespace(l.config); err != nil {
 		return err
 	}
-
-	// A.Q.
-	if err := cmd.Run(); err != nil {
-		e := fmt.Errorf("Failed 4 - %s", strings.TrimRight(stderr.String(), "\n"))
-		fmt.Printf("%s\n", e)
-		return e
-	}
-	fmt.Printf("Suceeded 4 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
 
 	// finalizeNamespace can change user/group which clears the parent death
 	// signal, so we restore it here.
