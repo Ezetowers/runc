@@ -71,18 +71,6 @@ func setupRootfs(config *configs.Config, console *linuxConsole, pipe io.ReadWrit
 			return newSystemErrorWithCause(err, "setting up /dev symlinks")
 		}
 	}
-	// A.Q.
-	path := "/proc/net/dev"
-	cmd := exec.Command("cat", path)
-	var stdout, stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	cmd.Stdout = &stdout
-	if err := cmd.Run(); err != nil {
-		e := fmt.Errorf("Failed N - %s", strings.TrimRight(stderr.String(), "\n"))
-		fmt.Printf("%s\n", e)
-		return e
-	}
-	fmt.Printf("Suceeded N - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
 
 	// Signal the parent to run the pre-start hooks.
 	// The hooks are run after the mounts are setup, but before we switch to the new
@@ -92,6 +80,7 @@ func setupRootfs(config *configs.Config, console *linuxConsole, pipe io.ReadWrit
 		return err
 	}
 
+	// only after this point network devices are set up
 	for _, m := range config.Mounts {
 		if err := mountToRootfsWithNetwork(m, config.Rootfs, config.MountLabel); err != nil {
 			return newSystemErrorWithCausef(err, "mounting %q to rootfs %q", m.Destination, config.Rootfs)
@@ -346,7 +335,6 @@ func mountToRootfsWithNetwork(m *configs.Mount, rootfs, mountLabel string) error
 			return e
 		}
 	}
-
 	return nil
 }
 
