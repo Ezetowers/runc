@@ -286,7 +286,7 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 			}
 		}
 	case "ceph", "nfs":
-		fmt.Fprintf(os.Stderr, "Mount delayed until network available for %s device %s to %s\n", m.Device, m.Source, dest)
+		fmt.Printf("Mount delayed until network available for %s device %s to %s\n", m.Device, m.Source, dest)
 	default:
 		if err := os.MkdirAll(dest, 0755); err != nil {
 			return err
@@ -332,7 +332,7 @@ func mountToRootfsWithNetwork(m *configs.Mount, rootfs, mountLabel string) error
 			fmt.Fprintf(os.Stderr, "%s\n", e)
 			return e
 		}
-		fmt.Fprintf(os.Stderr, "Succeeded in mounting %s device %s to %s with mode flag %s\n", m.Device, m.Source, dest, modeFlag)
+		fmt.Printf("Succeeded in mounting %s device %s to %s with mode flag %s\n", m.Device, m.Source, dest, modeFlag)
 	}
 
 	return nil
