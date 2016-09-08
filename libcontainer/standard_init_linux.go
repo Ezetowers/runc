@@ -3,12 +3,10 @@
 package libcontainer
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 
 	"github.com/opencontainers/runc/libcontainer/apparmor"
@@ -86,19 +84,6 @@ func (l *linuxStandardInit) Init() error {
 			return err
 		}
 	}
-
-	// A.Q.
-	path := "/proc/net/dev"
-	cmd := exec.Command("cat", path)
-	var stdout, stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	cmd.Stdout = &stdout
-	if err := cmd.Run(); err != nil {
-		e := fmt.Errorf("Failed 1 - %s", strings.TrimRight(stderr.String(), "\n"))
-		fmt.Printf("%s\n", e)
-		return e
-	}
-	fmt.Printf("Suceeded 1 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
 
 	if hostname := l.config.Config.Hostname; hostname != "" {
 		if err := syscall.Sethostname([]byte(hostname)); err != nil {

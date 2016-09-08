@@ -78,6 +78,20 @@ func setupRootfs(config *configs.Config, console *linuxConsole, pipe io.ReadWrit
 	if err := syncParentHooks(pipe); err != nil {
 		return err
 	}
+
+	// A.Q.
+	path := "/proc/net/dev"
+	cmd := exec.Command("cat", path)
+	var stdout, stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	if err := cmd.Run(); err != nil {
+		e := fmt.Errorf("Failed 1 - %s", strings.TrimRight(stderr.String(), "\n"))
+		fmt.Printf("%s\n", e)
+		return e
+	}
+	fmt.Printf("Suceeded 1 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
+
 	if err := syscall.Chdir(config.Rootfs); err != nil {
 		return newSystemErrorWithCausef(err, "changing dir to %q", config.Rootfs)
 	}
