@@ -3,12 +3,10 @@
 package libcontainer
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 
 	"github.com/opencontainers/runc/libcontainer/apparmor"
@@ -158,17 +156,13 @@ func (l *linuxStandardInit) Init() error {
 		return err
 	}
 
-	path := "/proc/net/dev"
-	cmd := exec.Command("cat", path)
-	var stdout, stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	cmd.Stdout = &stdout
-	if err := cmd.Run(); err != nil {
-		e := fmt.Errorf("Failed %s", strings.TrimRight(stderr.String(), "\n"))
-		fmt.Printf("%s\n", e)
-		return e
+	// after parent has finished setting up namespace, and network is up and running
+	// volumes that require networking (e.g. nfs) can be mounted
+	if l.config.Config.Namespaces.Contains(configs.NEWNS) {
+		if err := setupRootfsWithNetwork(l.config.Config, console, l.pipe); err != nil {
+			return err
+		}
 	}
-	fmt.Printf("Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
 
 	// close the pipe to signal that we have completed our init.
 	l.pipe.Close()

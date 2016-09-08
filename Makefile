@@ -23,7 +23,7 @@ MAN_INSTALL_PATH := ${PREFIX}/share/man/man8/
 VERSION := ${shell cat ./VERSION}
 
 all: $(RUNC_LINK)
-	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -tags "$(BUILDTAGS)" -o runc .
+	go build -i -ldflags "-w -X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -tags "$(BUILDTAGS)" -o runc .
 
 static: $(RUNC_LINK)
 	CGO_ENABLED=1 go build -i -tags "$(BUILDTAGS) cgo static_build" -ldflags " -extldflags -static -X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o runc .
