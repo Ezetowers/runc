@@ -284,6 +284,7 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 			}
 		}
 	case "ceph", "nfs":
+		// the volume will be actually mounted later on, when network is available
 		if err := createIfNotExists(dest, true); err != nil {
 			return err
 		}
