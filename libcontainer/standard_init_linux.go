@@ -3,10 +3,12 @@
 package libcontainer
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"github.com/opencontainers/runc/libcontainer/apparmor"
@@ -85,6 +87,19 @@ func (l *linuxStandardInit) Init() error {
 		}
 	}
 
+	// A.Q.
+	path := "/proc/net/dev"
+	cmd := exec.Command("cat", path)
+	var stdout, stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	if err := cmd.Run(); err != nil {
+		e := fmt.Errorf("Failed 1 - %s", strings.TrimRight(stderr.String(), "\n"))
+		fmt.Printf("%s\n", e)
+		return e
+	}
+	fmt.Printf("Suceeded 1 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
+
 	if hostname := l.config.Config.Hostname; hostname != "" {
 		if err := syscall.Sethostname([]byte(hostname)); err != nil {
 			return err
@@ -96,6 +111,14 @@ func (l *linuxStandardInit) Init() error {
 	if err := label.SetProcessLabel(l.config.ProcessLabel); err != nil {
 		return err
 	}
+
+	// A.Q.
+	if err := cmd.Run(); err != nil {
+		e := fmt.Errorf("Failed 2 - %s", strings.TrimRight(stderr.String(), "\n"))
+		fmt.Printf("%s\n", e)
+		return e
+	}
+	fmt.Printf("Suceeded 2 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
 
 	for key, value := range l.config.Config.Sysctl {
 		if err := writeSystemProperty(key, value); err != nil {
@@ -121,6 +144,15 @@ func (l *linuxStandardInit) Init() error {
 			return err
 		}
 	}
+
+	// A.Q.
+	if err := cmd.Run(); err != nil {
+		e := fmt.Errorf("Failed 3 - %s", strings.TrimRight(stderr.String(), "\n"))
+		fmt.Printf("%s\n", e)
+		return e
+	}
+	fmt.Printf("Suceeded 3 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
+
 	// Tell our parent that we're ready to Execv. This must be done before the
 	// Seccomp rules have been applied, because we need to be able to read and
 	// write to a socket.
@@ -138,6 +170,15 @@ func (l *linuxStandardInit) Init() error {
 	if err := finalizeNamespace(l.config); err != nil {
 		return err
 	}
+
+	// A.Q.
+	if err := cmd.Run(); err != nil {
+		e := fmt.Errorf("Failed 4 - %s", strings.TrimRight(stderr.String(), "\n"))
+		fmt.Printf("%s\n", e)
+		return e
+	}
+	fmt.Printf("Suceeded 4 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
+
 	// finalizeNamespace can change user/group which clears the parent death
 	// signal, so we restore it here.
 	if err := pdeath.Restore(); err != nil {
