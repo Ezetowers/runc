@@ -71,6 +71,19 @@ func setupRootfs(config *configs.Config, console *linuxConsole, pipe io.ReadWrit
 			return newSystemErrorWithCause(err, "setting up /dev symlinks")
 		}
 	}
+	// A.Q.
+	path := "/proc/net/dev"
+	cmd := exec.Command("cat", path)
+	var stdout, stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	if err := cmd.Run(); err != nil {
+		e := fmt.Errorf("Failed N - %s", strings.TrimRight(stderr.String(), "\n"))
+		fmt.Printf("%s\n", e)
+		return e
+	}
+	fmt.Printf("Suceeded N - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
+
 	// Signal the parent to run the pre-start hooks.
 	// The hooks are run after the mounts are setup, but before we switch to the new
 	// root, so that the old root is still available in the hooks for any mount
@@ -79,18 +92,11 @@ func setupRootfs(config *configs.Config, console *linuxConsole, pipe io.ReadWrit
 		return err
 	}
 
-	// A.Q.
-	path := "/proc/net/dev"
-	cmd := exec.Command("cat", path)
-	var stdout, stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	cmd.Stdout = &stdout
-	if err := cmd.Run(); err != nil {
-		e := fmt.Errorf("Failed 1 - %s", strings.TrimRight(stderr.String(), "\n"))
-		fmt.Printf("%s\n", e)
-		return e
+	for _, m := range config.Mounts {
+		if err := mountToRootfsWithNetwork(m, config.Rootfs, config.MountLabel); err != nil {
+			return newSystemErrorWithCausef(err, "mounting %q to rootfs %q", m.Destination, config.Rootfs)
+		}
 	}
-	fmt.Printf("Suceeded 1 - Command output: %s\n", strings.TrimRight(stdout.String(), "\n"))
 
 	if err := syscall.Chdir(config.Rootfs); err != nil {
 		return newSystemErrorWithCausef(err, "changing dir to %q", config.Rootfs)
@@ -126,17 +132,6 @@ func setupRootfs(config *configs.Config, console *linuxConsole, pipe io.ReadWrit
 		}
 	}
 	syscall.Umask(0022)
-	return nil
-}
-
-// setupRootfsWithNetwork sets up the mount points that require the network to
-// be ready before mounting
-func setupRootfsWithNetwork(config *configs.Config, console *linuxConsole, pipe io.ReadWriter) (err error) {
-	for _, m := range config.Mounts {
-		if err := mountToRootfsWithNetwork(m, config.Rootfs, config.MountLabel); err != nil {
-			return newSystemErrorWithCausef(err, "mounting %q to rootfs %q", m.Destination, config.Rootfs)
-		}
-	}
 	return nil
 }
 
@@ -322,6 +317,11 @@ func mountToRootfsWithNetwork(m *configs.Mount, rootfs, mountLabel string) error
 
 	switch m.Device {
 	case "ceph", "nfs":
+
+		if err := createIfNotExists(dest, true); err != nil {
+			return err
+		}
+
 		modeFlag := "--rw"
 		if m.Flags&syscall.MS_RDONLY != 0 {
 			modeFlag = "--read-only"

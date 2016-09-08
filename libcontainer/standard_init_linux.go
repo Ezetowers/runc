@@ -158,14 +158,6 @@ func (l *linuxStandardInit) Init() error {
 		return err
 	}
 
-	// after parent has finished setting up namespace, and network is up and running
-	// volumes that require networking (e.g. nfs) can be mounted
-	if l.config.Config.Namespaces.Contains(configs.NEWNS) {
-		if err := setupRootfsWithNetwork(l.config.Config, console, l.pipe); err != nil {
-			return err
-		}
-	}
-
 	// close the pipe to signal that we have completed our init.
 	l.pipe.Close()
 	// wait for the fifo to be opened on the other side before
