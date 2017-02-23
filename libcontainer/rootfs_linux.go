@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -21,6 +22,8 @@ import (
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/label"
 	"github.com/opencontainers/runc/libcontainer/system"
+	"github.com/Sirupsen/logrus"
+
 	libcontainerUtils "github.com/opencontainers/runc/libcontainer/utils"
 )
 
@@ -306,6 +309,20 @@ func mountToRootfsWithNetwork(m *configs.Mount, rootfs, mountLabel string) error
 
 		if err := DoMountCmd(m.Device, m.Source, dest, []string{modeFlag, "-o", "discard"}); err != nil {
 			return err
+		}
+
+		fsType, err := libcontainerUtils.DeviceHasFilesystem(m.Source)
+		if err != nil {
+			return err
+		}
+		// attempt to resize filesystem if it's ext{234}
+		if matched, _ := regexp.MatchString("ext[234]$", fsType); matched {
+			logrus.Infof("Synchronizing the size of volume %s with fs.", m.Source)
+			resizeOutput, err := exec.Command("resize2fs", m.Source).Output()
+			if err != nil {
+				return err
+			}
+			logrus.Infof("Ran resize2fs on device '%s': %s", m.Source, resizeOutput)
 		}
 	}
 	return nil
