@@ -326,6 +326,8 @@ func mountToRootfsWithNetwork(m *configs.Mount, rootfs, mountLabel string) error
 				logrus.Infof("Ran resize2fs on device '%s': %s", m.Source, resizeOutput)
 			}
 		} else if m.Device == "nfs" {
+			// Perform a bind mount of the nfs directory already mounted in the host, this is
+			// done after the network is available to preserve the volumes declaration order.
 			if err := DoMountCmd(m.Device, m.Source, dest, []string{modeFlag, "--bind"}); err != nil {
 				return err
 			}
