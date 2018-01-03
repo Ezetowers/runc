@@ -140,7 +140,7 @@ func DeviceHasFilesystem(device string) (string, error) {
 		return filesystem, nil
 	}
 	if exitError, ok := err.(*exec.ExitError); ok {
-        ws := exitError.Sys().(syscall.WaitStatus)
+        ws := exitError.Sys().(unix.WaitStatus)
         exitCode := ws.ExitStatus()
 		logrus.Debugf("blkid exit code for '%s':'%d'", device, exitCode)
 		if exitCode == 2 && len(strings.TrimSpace(string(fsType))) == 0 {
