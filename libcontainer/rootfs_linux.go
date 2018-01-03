@@ -376,7 +376,7 @@ func mountToRootfsWithNetwork(m *configs.Mount, rootfs, mountLabel string) error
 		}
 
 		modeFlag := "--rw"
-		if m.Flags&syscall.MS_RDONLY != 0 {
+		if m.Flags&unix.MS_RDONLY != 0 {
 			modeFlag = "--read-only"
 		}
 
