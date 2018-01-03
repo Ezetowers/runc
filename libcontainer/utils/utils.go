@@ -2,13 +2,19 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
+
+	"syscall"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -109,4 +115,25 @@ func Annotations(labels []string) (bundle string, userAnnotations map[string]str
 
 func GetIntSize() int {
 	return int(unsafe.Sizeof(1))
+}
+
+// return the filesystem in a given block device
+func DeviceHasFilesystem(device string) (string, error) {
+	fsType, err := exec.Command("blkid", "-s", "TYPE", "-o", "value", device).Output()
+	logrus.Debugf("looking for filesystem in device '%s': '%s' -> '%v'", device, fsType, err)
+	filesystem := strings.TrimSpace(string(fsType))
+	if err == nil || len(fsType) > 0 {
+		logrus.Infof("Filesystem found in device '%s': '%s'", device, filesystem)
+		return filesystem, nil
+	}
+	if exitError, ok := err.(*exec.ExitError); ok {
+		ws := exitError.Sys().(syscall.WaitStatus)
+		exitCode := ws.ExitStatus()
+		logrus.Debugf("blkid exit code for '%s':'%d'", device, exitCode)
+		if exitCode == 2 && len(strings.TrimSpace(string(fsType))) == 0 {
+			logrus.Infof("No filesystem found in device '%s'", device)
+			return "", nil
+		}
+	}
+	return "", fmt.Errorf("Failed to determine '%s' filesystem. blkid '%v' is not a valid exec.ExitError", device, err)
 }
