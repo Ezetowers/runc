@@ -14,6 +14,8 @@ import (
 
 	"golang.org/x/sys/unix"
 
+	"syscall"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -140,13 +142,13 @@ func DeviceHasFilesystem(device string) (string, error) {
 		return filesystem, nil
 	}
 	if exitError, ok := err.(*exec.ExitError); ok {
-        ws := exitError.Sys().(unix.WaitStatus)
-        exitCode := ws.ExitStatus()
+		ws := exitError.Sys().(syscall.WaitStatus)
+		exitCode := ws.ExitStatus()
 		logrus.Debugf("blkid exit code for '%s':'%d'", device, exitCode)
 		if exitCode == 2 && len(strings.TrimSpace(string(fsType))) == 0 {
 			logrus.Infof("No filesystem found in device '%s'", device)
 			return "", nil
 		}
-    }
+	}
 	return "", fmt.Errorf("Failed to determine '%s' filesystem. blkid '%v' is not a valid exec.ExitError", device, err)
 }
