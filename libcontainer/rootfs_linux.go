@@ -91,11 +91,11 @@ func prepareRootfs(pipe io.ReadWriter, iConfig *initConfig) (err error) {
 	}
 
     // only after this point network devices are set up
-	for _, m := range config.Mounts {
-		if err := mountToRootfsWithNetwork(m, config.Rootfs, config.MountLabel); err != nil {
-			return newSystemErrorWithCausef(err, "mounting %q to rootfs %q", m.Destination, config.Rootfs)
-		}
-	}
+	//for _, m := range config.Mounts {
+	//	if err := mountToRootfsWithNetwork(m, config.Rootfs, config.MountLabel); err != nil {
+	//		return newSystemErrorWithCausef(err, "mounting %q to rootfs %q", m.Destination, config.Rootfs)
+	//	}
+	//}
 
 	// The reason these operations are done here rather than in finalizeRootfs
 	// is because the console-handling code gets quite sticky if we have to set
@@ -284,9 +284,40 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 			}
 		}
 	case "ceph", "nfs":
-		// the volume will be actually mounted later on, when network is available
+
 		if err := createIfNotExists(dest, true); err != nil {
 			return err
+		}
+
+		modeFlag := "--rw"
+		if m.Flags&unix.MS_RDONLY != 0 {
+			modeFlag = "--read-only"
+		}
+
+		if m.Device == "ceph" {
+			if err := DoMountCmd(m.Device, m.Source, dest, []string{modeFlag, "-o", "discard"}); err != nil {
+				return err
+			}
+
+			fsType, err := libcontainerUtils.DeviceHasFilesystem(m.Source)
+			if err != nil {
+				return err
+			}
+			// attempt to resize filesystem if it's ext{234}
+			if matched, _ := regexp.MatchString("ext[234]$", fsType); matched {
+				logrus.Infof("Synchronizing the size of volume %s with fs.", m.Source)
+				resizeOutput, err := exec.Command("resize2fs", m.Source).Output()
+				if err != nil {
+					return err
+				}
+				logrus.Infof("Ran resize2fs on device '%s': %s", m.Source, resizeOutput)
+			}
+		} else if m.Device == "nfs" {
+			// Perform a bind mount of the nfs directory already mounted in the host, this is
+			// done after the network is available to preserve the volumes declaration order.
+			if err := DoMountCmd(m.Device, m.Source, dest, []string{modeFlag, "--bind"}); err != nil {
+				return err
+			}
 		}
 	case "cgroup":
 		binds, err := getCgroupMounts(m)
@@ -360,54 +391,7 @@ func mountToRootfs(m *configs.Mount, rootfs, mountLabel string) error {
 	return nil
 }
 
-func mountToRootfsWithNetwork(m *configs.Mount, rootfs, mountLabel string) error {
-	var (
-		dest = m.Destination
-	)
-	if !strings.HasPrefix(dest, rootfs) {
-		dest = filepath.Join(rootfs, dest)
-	}
 
-	switch m.Device {
-	case "ceph", "nfs":
-
-		if err := createIfNotExists(dest, true); err != nil {
-			return err
-		}
-
-		modeFlag := "--rw"
-		if m.Flags&unix.MS_RDONLY != 0 {
-			modeFlag = "--read-only"
-		}
-
-		if m.Device == "ceph" {
-			if err := DoMountCmd(m.Device, m.Source, dest, []string{modeFlag, "-o", "discard"}); err != nil {
-				return err
-			}
-
-			fsType, err := libcontainerUtils.DeviceHasFilesystem(m.Source)
-			if err != nil {
-				return err
-			}
-			// attempt to resize filesystem if it's ext{234}
-			if matched, _ := regexp.MatchString("ext[234]$", fsType); matched {
-				logrus.Infof("Synchronizing the size of volume %s with fs.", m.Source)
-				resizeOutput, err := exec.Command("resize2fs", m.Source).Output()
-				if err != nil {
-					return err
-				}
-				logrus.Infof("Ran resize2fs on device '%s': %s", m.Source, resizeOutput)
-			}
-		} else if m.Device == "nfs" {
-			// Perform a bind mount of the nfs directory already mounted in the host, this is
-			// done after the network is available to preserve the volumes declaration order.
-			if err := DoMountCmd(m.Device, m.Source, dest, []string{modeFlag, "--bind"}); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
 
 // Attempts a mount cmd
 func DoMountCmd(deviceName, source, dest string, args []string) error {
