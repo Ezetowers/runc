@@ -246,7 +246,7 @@ other options are ignored.
 			r.Pids.Limit = int64(context.Int("pids-limit"))
 		}
 
-		if *r.Memory.kernel != 0 || *r.Memory.KernelTCP != 0 {
+		if *r.Memory.Kernel != 0 || *r.Memory.KernelTCP != 0 {
 			logrus.Warn("Kernel memory settings are ignored and will be removed")
 		}
 
