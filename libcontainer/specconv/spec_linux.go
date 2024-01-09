@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/seccomp"
 	libcontainerUtils "github.com/opencontainers/runc/libcontainer/utils"
@@ -382,9 +380,6 @@ func createCgroupConfig(opts *CreateOpts) (*configs.Cgroup, error) {
 			}
 			if r.Memory.Kernel != nil || c.KernelMemoryTCP != nil {
 				logrus.Warn("Kernel memory settings are ignored and will be removed")
-			}
-			if r.Memory.KernelTCP != nil {
-				c.Resources.KernelMemoryTCP = *r.Memory.KernelTCP
 			}
 			if r.Memory.Swappiness != nil {
 				c.Resources.MemorySwappiness = r.Memory.Swappiness
