@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"command-line-arguments/endor/github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/seccomp"
