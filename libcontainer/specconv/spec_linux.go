@@ -378,7 +378,7 @@ func createCgroupConfig(opts *CreateOpts) (*configs.Cgroup, error) {
 			if r.Memory.Swap != nil {
 				c.Resources.MemorySwap = *r.Memory.Swap
 			}
-			if r.Memory.Kernel != nil || c.Memory.KernelMemoryTCP != nil {
+			if r.Memory.Kernel != nil || c.KernelMemoryTCP != nil {
 				logrus.Warn("Kernel memory settings are ignored and will be removed")
 			}
 			if r.Memory.Swappiness != nil {
