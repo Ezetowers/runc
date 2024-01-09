@@ -685,37 +685,6 @@ func testPids(t *testing.T, systemd bool) {
 	// As such, we don't test that case. YMMV.
 }
 
-func TestRunWithKernelMemory(t *testing.T) {
-	testRunWithKernelMemory(t, false)
-}
-
-func TestRunWithKernelMemorySystemd(t *testing.T) {
-	if !systemd.UseSystemd() {
-		t.Skip("Systemd is unsupported")
-	}
-	testRunWithKernelMemory(t, true)
-}
-
-func testRunWithKernelMemory(t *testing.T, systemd bool) {
-	if testing.Short() {
-		return
-	}
-	rootfs, err := newRootfs()
-	ok(t, err)
-	defer remove(rootfs)
-
-	config := newTemplateConfig(rootfs)
-	if systemd {
-		config.Cgroups.Parent = "system.slice"
-	}
-	config.Cgroups.Resources.KernelMemory = 52428800
-
-	_, _, err = runContainer(config, "", "ps")
-	if err != nil {
-		t.Fatalf("runContainer failed with kernel memory limit: %v", err)
-	}
-}
-
 func TestContainerState(t *testing.T) {
 	if testing.Short() {
 		return

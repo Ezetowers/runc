@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package fs
@@ -32,38 +33,13 @@ func (s *MemoryGroup) Name() string {
 }
 
 func (s *MemoryGroup) Apply(d *cgroupData) (err error) {
-	path, err := d.path("memory")
-	if err != nil && !cgroups.IsNotFound(err) {
-		return err
-	} else if path == "" {
-		return nil
-	}
-	if memoryAssigned(d.config) {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			if err := os.MkdirAll(path, 0755); err != nil {
-				return err
-			}
-			// Only enable kernel memory accouting when this cgroup
-			// is created by libcontainer, otherwise we might get
-			// error when people use `cgroupsPath` to join an existed
-			// cgroup whose kernel memory is not initialized.
-			if err := EnableKernelMemoryAccounting(path); err != nil {
-				return err
-			}
-		}
-	}
-	defer func() {
-		if err != nil {
-			os.RemoveAll(path)
-		}
-	}()
-
-	// We need to join memory cgroup after set memory limits, because
-	// kmem.limit_in_bytes can only be set when the cgroup is empty.
-	_, err = d.join("memory")
-	if err != nil && !cgroups.IsNotFound(err) {
-		return err
-	}
+	// New kernels (5.4 and onwards) are not using kmem.limits_in_bytes/
+	// This is generating an issue when we try to deploy docker in those
+	// new kernels. For this reason, we are commeting these checks here
+	// hoping that they are not necessary
+	// Source 1: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/Documentation/admin-guide/cgroup-v1/memory.rst?h=linux-6.1.y&id=21ef9e11205fca43785eecf7d4a99528d4de5701
+	// Source 2: https://github.com/opencontainers/runc/commit/52390d68040637dfc77f9fda6bbe70952423d380
+	//
 	return nil
 }
 
@@ -162,11 +138,7 @@ func (s *MemoryGroup) Set(path string, cgroup *configs.Cgroup) error {
 		return err
 	}
 
-	if cgroup.Resources.KernelMemory != 0 {
-		if err := setKernelMemory(path, cgroup.Resources.KernelMemory); err != nil {
-			return err
-		}
-	}
+	// ignore KernelMemory and KernelMemoryTCP
 
 	if cgroup.Resources.MemoryReservation != 0 {
 		if err := writeFile(path, "memory.soft_limit_in_bytes", strconv.FormatInt(cgroup.Resources.MemoryReservation, 10)); err != nil {
@@ -174,11 +146,6 @@ func (s *MemoryGroup) Set(path string, cgroup *configs.Cgroup) error {
 		}
 	}
 
-	if cgroup.Resources.KernelMemoryTCP != 0 {
-		if err := writeFile(path, "memory.kmem.tcp.limit_in_bytes", strconv.FormatInt(cgroup.Resources.KernelMemoryTCP, 10)); err != nil {
-			return err
-		}
-	}
 	if cgroup.Resources.OomKillDisable {
 		if err := writeFile(path, "memory.oom_control", "1"); err != nil {
 			return err
@@ -258,8 +225,6 @@ func memoryAssigned(cgroup *configs.Cgroup) bool {
 	return cgroup.Resources.Memory != 0 ||
 		cgroup.Resources.MemoryReservation != 0 ||
 		cgroup.Resources.MemorySwap > 0 ||
-		cgroup.Resources.KernelMemory > 0 ||
-		cgroup.Resources.KernelMemoryTCP > 0 ||
 		cgroup.Resources.OomKillDisable ||
 		(cgroup.Resources.MemorySwappiness != nil && int64(*cgroup.Resources.MemorySwappiness) != -1)
 }

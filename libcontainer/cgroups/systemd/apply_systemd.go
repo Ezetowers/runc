@@ -1,3 +1,4 @@
+//go:build linux && !static_build
 // +build linux,!static_build
 
 package systemd
@@ -280,14 +281,6 @@ func (m *Manager) Apply(pid int) error {
 			newProp("BlockIOWeight", uint64(c.Resources.BlkioWeight)))
 	}
 
-	// We have to set kernel memory here, as we can't change it once
-	// processes have been attached to the cgroup.
-	if c.Resources.KernelMemory != 0 {
-		if err := setKernelMemory(c); err != nil {
-			return err
-		}
-	}
-
 	if _, err := theConn.StartTransientUnit(unitName, "replace", properties, nil); err != nil && !isUnitExists(err) {
 		return err
 	}
@@ -528,18 +521,6 @@ func getUnitName(c *configs.Cgroup) string {
 		return fmt.Sprintf("%s-%s.scope", c.ScopePrefix, c.Name)
 	}
 	return c.Name
-}
-
-func setKernelMemory(c *configs.Cgroup) error {
-	path, err := getSubsystemPath(c, "memory")
-	if err != nil && !cgroups.IsNotFound(err) {
-		return err
-	}
-
-	if err := os.MkdirAll(path, 0755); err != nil {
-		return err
-	}
-	return fs.EnableKernelMemoryAccounting(path)
 }
 
 // isUnitExists returns true if the error is that a systemd unit already exists.

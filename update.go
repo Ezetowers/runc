@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package main
@@ -12,6 +13,7 @@ import (
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/intelrdt"
 	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -92,11 +94,11 @@ other options are ignored.
 		},
 		cli.StringFlag{
 			Name:  "kernel-memory",
-			Usage: "Kernel memory limit (in bytes)",
+			Usage: "(obsoleted; do not use)",
 		},
 		cli.StringFlag{
 			Name:  "kernel-memory-tcp",
-			Usage: "Kernel memory limit (in bytes) for tcp buffer",
+			Usage: "(obsoleted; do not use)",
 		},
 		cli.StringFlag{
 			Name:  "memory",
@@ -244,6 +246,10 @@ other options are ignored.
 			r.Pids.Limit = int64(context.Int("pids-limit"))
 		}
 
+		if *r.Memory.kernel != 0 || *r.Memory.KernelTCP != 0 {
+			logrus.Warn("Kernel memory settings are ignored and will be removed")
+		}
+
 		// Update the value
 		config.Cgroups.Resources.BlkioWeight = *r.BlockIO.Weight
 		config.Cgroups.Resources.CpuPeriod = *r.CPU.Period
@@ -253,8 +259,6 @@ other options are ignored.
 		config.Cgroups.Resources.CpuRtRuntime = *r.CPU.RealtimeRuntime
 		config.Cgroups.Resources.CpusetCpus = r.CPU.Cpus
 		config.Cgroups.Resources.CpusetMems = r.CPU.Mems
-		config.Cgroups.Resources.KernelMemory = *r.Memory.Kernel
-		config.Cgroups.Resources.KernelMemoryTCP = *r.Memory.KernelTCP
 		config.Cgroups.Resources.Memory = *r.Memory.Limit
 		config.Cgroups.Resources.MemoryReservation = *r.Memory.Reservation
 		config.Cgroups.Resources.MemorySwap = *r.Memory.Swap

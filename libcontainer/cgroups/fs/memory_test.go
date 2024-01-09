@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package fs
@@ -172,62 +173,6 @@ func TestMemorySetSwapSmallerThanMemory(t *testing.T) {
 	}
 	if value != memoryswapAfter {
 		t.Fatal("Got the wrong value, set memory.memsw.limit_in_bytes failed.")
-	}
-}
-
-func TestMemorySetKernelMemory(t *testing.T) {
-	helper := NewCgroupTestUtil("memory", t)
-	defer helper.cleanup()
-
-	const (
-		kernelMemoryBefore = 314572800 // 300M
-		kernelMemoryAfter  = 524288000 // 500M
-	)
-
-	helper.writeFileContents(map[string]string{
-		"memory.kmem.limit_in_bytes": strconv.Itoa(kernelMemoryBefore),
-	})
-
-	helper.CgroupData.config.Resources.KernelMemory = kernelMemoryAfter
-	memory := &MemoryGroup{}
-	if err := memory.Set(helper.CgroupPath, helper.CgroupData.config); err != nil {
-		t.Fatal(err)
-	}
-
-	value, err := getCgroupParamUint(helper.CgroupPath, "memory.kmem.limit_in_bytes")
-	if err != nil {
-		t.Fatalf("Failed to parse memory.kmem.limit_in_bytes - %s", err)
-	}
-	if value != kernelMemoryAfter {
-		t.Fatal("Got the wrong value, set memory.kmem.limit_in_bytes failed.")
-	}
-}
-
-func TestMemorySetKernelMemoryTCP(t *testing.T) {
-	helper := NewCgroupTestUtil("memory", t)
-	defer helper.cleanup()
-
-	const (
-		kernelMemoryTCPBefore = 314572800 // 300M
-		kernelMemoryTCPAfter  = 524288000 // 500M
-	)
-
-	helper.writeFileContents(map[string]string{
-		"memory.kmem.tcp.limit_in_bytes": strconv.Itoa(kernelMemoryTCPBefore),
-	})
-
-	helper.CgroupData.config.Resources.KernelMemoryTCP = kernelMemoryTCPAfter
-	memory := &MemoryGroup{}
-	if err := memory.Set(helper.CgroupPath, helper.CgroupData.config); err != nil {
-		t.Fatal(err)
-	}
-
-	value, err := getCgroupParamUint(helper.CgroupPath, "memory.kmem.tcp.limit_in_bytes")
-	if err != nil {
-		t.Fatalf("Failed to parse memory.kmem.tcp.limit_in_bytes - %s", err)
-	}
-	if value != kernelMemoryTCPAfter {
-		t.Fatal("Got the wrong value, set memory.kmem.tcp.limit_in_bytes failed.")
 	}
 }
 
