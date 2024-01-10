@@ -40,6 +40,10 @@ func (s *MemoryGroup) Apply(d *cgroupData) (err error) {
 	// Source 1: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/Documentation/admin-guide/cgroup-v1/memory.rst?h=linux-6.1.y&id=21ef9e11205fca43785eecf7d4a99528d4de5701
 	// Source 2: https://github.com/opencontainers/runc/commit/52390d68040637dfc77f9fda6bbe70952423d380
 	//
+	_, err = d.join("memory")
+	if err != nil && !cgroups.IsNotFound(err) {
+		return err
+	}
 	return nil
 }
 
